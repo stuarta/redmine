@@ -426,6 +426,8 @@ namespace :redmine do
                           :wiki_page_title => milestone.name.to_s,
                           :effective_date => milestone.completed
 
+          v.status = 'closed' unless milestone.completed.nil?
+
           next unless v.save
           version_map[milestone.name] = v
           migrated_milestones += 1

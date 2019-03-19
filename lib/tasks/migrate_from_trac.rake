@@ -155,7 +155,6 @@ namespace :redmine do
           read_attribute(:description).to_s.slice(0,255)
         end
 
-      private
         def trac_fullpath
           attachment_type = read_attribute(:type)
           #replace exotic characters with their hex representation to avoid invalid filenames
@@ -477,6 +476,8 @@ namespace :redmine do
         r.save!
         custom_field_map['resolution'] = r
 
+        print "Missing attachments will be logged to 'missing_attachments.log'\n"
+        missing = File.new("missing_attachments.log", "w")
         # Tickets
         print "Migrating tickets"
           TracTicket.find_each(:batch_size => 200) do |ticket|
@@ -533,7 +534,11 @@ namespace :redmine do
 
           # Attachments
           ticket.attachments.each do |attachment|
-            next unless attachment.exist?
+            if not attachment.exist?
+              missing.write("#{attachment.trac_fullpath}\n")
+              missing.flush
+              next
+            end
               attachment.open {
                 a = Attachment.new :created_on => attachment.time
                 a.file = attachment
@@ -584,7 +589,11 @@ namespace :redmine do
 
             # Attachments
             page.attachments.each do |attachment|
-              next unless attachment.exist?
+              if not attachment.exist?
+                missing.write("#{attachment.trac_fullpath}\n")
+                missing.flush
+                next
+              end
               next if p.attachments.find_by_filename(attachment.filename.gsub(/^.*(\\|\/)/, '').gsub(/[^\w\.\-]/,'_')) #add only once per page
               attachment.open {
                 a = Attachment.new :created_on => attachment.time

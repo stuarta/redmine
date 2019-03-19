@@ -122,6 +122,10 @@ namespace :redmine do
         self.table_name = :attachment
         self.inheritance_column = :none
 
+        scope :ticket_attachment, ->     { where("type = 'ticket'") }
+        scope :wiki_attachment,   ->     { where("type = 'wiki'") }
+        scope :by_id,             ->(id) { where("id = ?", "#{id}") }
+
         def time; Time.at(0, read_attribute(:time)) end
 
         def original_filename
@@ -172,7 +176,7 @@ namespace :redmine do
         has_many :customs, :class_name => "TracTicketCustom", :foreign_key => :ticket
 
         def attachments
-          TracMigrate::TracAttachment.all(:conditions => ["type = 'ticket' AND id = ?", self.id.to_s])
+          TracMigrate::TracAttachment.ticket_attachment.by_id(self.id.to_s)
         end
 
         def ticket_type
@@ -220,7 +224,7 @@ namespace :redmine do
         end
 
         def attachments
-          TracMigrate::TracAttachment.all(:conditions => ["type = 'wiki' AND id = ?", self.id.to_s])
+          TracMigrate::TracAttachment.wiki_attachment.by_id(self.id.to_s)
         end
 
         def time; Time.at(0, read_attribute(:time)) end
@@ -599,10 +603,10 @@ namespace :redmine do
         puts "Components:      #{migrated_components}/#{TracComponent.count}"
         puts "Milestones:      #{migrated_milestones}/#{TracMilestone.count}"
         puts "Tickets:         #{migrated_tickets}/#{TracTicket.count}"
-        puts "Ticket files:    #{migrated_ticket_attachments}/" + TracAttachment.count(:conditions => {:type => 'ticket'}).to_s
+        puts "Ticket files:    #{migrated_ticket_attachments}/" + TracAttachment.ticket_attachment.count.to_s
         puts "Custom values:   #{migrated_custom_values}/#{TracTicketCustom.count}"
         puts "Wiki edits:      #{migrated_wiki_edits}/#{wiki_edit_count}"
-        puts "Wiki files:      #{migrated_wiki_attachments}/" + TracAttachment.count(:conditions => {:type => 'wiki'}).to_s
+        puts "Wiki files:      #{migrated_wiki_attachments}/" + TracAttachment.wiki_attachment.count.to_s
       end
 
       def self.limit_for(klass, attribute)

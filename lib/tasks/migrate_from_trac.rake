@@ -223,6 +223,12 @@ namespace :redmine do
           super.select {|column| column.name.to_s != 'readonly'}
         end
 
+        def self.instance_method_already_implemented?(method_name)
+          # Hides readonly Trac field to prevent clash with AR readonly? method (Rails 3)
+          return true if method_name == 'readonly?'
+          super
+        end
+
         def attachments
           TracMigrate::TracAttachment.wiki_attachment.by_id(self.id.to_s)
         end

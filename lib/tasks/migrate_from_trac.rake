@@ -120,7 +120,7 @@ namespace :redmine do
 
       class TracAttachment < ActiveRecord::Base
         self.table_name = :attachment
-        set_inheritance_column :none
+        self.inheritance_column = :none
 
         def time; Time.at(read_attribute(:time)) end
 
@@ -165,7 +165,7 @@ namespace :redmine do
 
       class TracTicket < ActiveRecord::Base
         self.table_name = :ticket
-        set_inheritance_column :none
+        self.inheritance_column = :none
 
         # ticket changes: only migrate status changes and comments
         has_many :ticket_changes, :class_name => "TracTicketChange", :foreign_key => :ticket
@@ -212,7 +212,7 @@ namespace :redmine do
 
       class TracWikiPage < ActiveRecord::Base
         self.table_name = :wiki
-        set_primary_key :name
+        self.primary_key = :name
 
         def self.columns
           # Hides readonly Trac field to prevent clash with AR readonly? method (Rails 2.0)

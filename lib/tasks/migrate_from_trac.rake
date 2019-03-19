@@ -493,7 +493,7 @@ namespace :redmine do
           i.tracker = TRACKER_MAPPING[ticket.ticket_type] || DEFAULT_TRACKER
           i.status = STATUS_MAPPING[ticket.status] || i.default_status
           i.id = ticket.id unless Issue.exists?(ticket.id)
-          next unless Time.fake(ticket.changetime) { i.save }
+          Time.fake(ticket.changetime) { i.save }
           TICKET_MAP[ticket.id] = i.id
           migrated_tickets += 1
 

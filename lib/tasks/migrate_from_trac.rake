@@ -19,6 +19,7 @@
 
 require 'active_record'
 require 'pp'
+require 'digest'
 
 namespace :redmine do
   desc 'Trac migration script'
@@ -156,6 +157,16 @@ namespace :redmine do
         end
 
         def trac_fullpath
+          full_path = get_hashed_path
+          if File.file? full_path
+            full_path
+          else
+            get_legacy_path
+          end
+        end
+
+        private
+        def get_legacy_path
           attachment_type = read_attribute(:type)
           #replace exotic characters with their hex representation to avoid invalid filenames
           trac_file = filename.gsub( /[^a-zA-Z0-9\-_\.!~*']/n ) do |x|
@@ -163,6 +174,23 @@ namespace :redmine do
             sprintf('%%%02X', codepoint)
           end
           "#{TracMigrate.trac_attachments_directory}/#{attachment_type}/#{id}/#{trac_file}"
+        end
+
+        def get_hashed_filename
+          f_hash = Digest::SHA1.hexdigest("#{filename}")
+          f_ext_re = Regexp.new('\.[A-Za-z0-9]+\Z')
+          f_extension = f_ext_re.match("#{filename}")
+          if f_extension
+            f_hash + f_extension[0]
+          else
+            f_hash
+          end
+        end
+
+        def get_hashed_path
+          base_path = File.join("#{TracMigrate.trac_directory}", "files", "attachments", read_attribute(:type))
+          id_hash = Digest::SHA1.hexdigest("#{id}")
+          File.join(base_path, id_hash[0..2], id_hash, get_hashed_filename)
         end
       end
 
